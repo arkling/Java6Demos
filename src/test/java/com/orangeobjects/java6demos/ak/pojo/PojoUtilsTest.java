@@ -26,9 +26,9 @@ public class PojoUtilsTest {
     @Test
     public void testExtract() throws Exception {
         PojoUtils.FieldInfo[] fia = PojoUtils.extractFieldInfo(SimplePojo.class);
-        assertEquals(2, fia.length);
+        assertEquals(3, fia.length);
         println(Arrays.toString(fia));
-        assertEquals(Long.class, fia[0].type);
+        assertEquals(Long.class, fia[1].type);
     }
 
     @Test

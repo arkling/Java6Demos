@@ -6,9 +6,9 @@
  * 
  *  $Id$
  */
-package com.orangeobjects.java6demos.ak.pojo;
+package com.orangeobjects.java6demos.ak.pojosetter;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,18 +30,21 @@ public class PojoUtils {
         
     }
 
-    public static FieldInfo[] extractFieldInfo(AbstractPojo pojo) {
-        return extractFieldInfo(pojo.getClass());
-    }
-
     private static void expandFieldInfoList(Class<?> clazz, List<FieldInfo> fiList) {
         assert fiList != null;
-        for (Field f : clazz.getDeclaredFields()) {
+        for (Method m : clazz.getDeclaredMethods()) {
+            String name = m.getName();
+            if (! name.startsWith("set")) continue;
+            Class<?>[] parameterTypes = m.getParameterTypes();
+            if (parameterTypes.length != 1) continue;
+            Class<?> returnType = m.getReturnType();
+            if (!returnType.equals(void.class)) continue;
             FieldInfo fi = new FieldInfo();
-            fi.type = f.getType();
-            fi.name = f.getName();
-            PojoAnnotation anno = f.getAnnotation(PojoAnnotation.class);
-            fi.displayName = anno != null ? anno.displayName() : f.getName();
+            // remove "set" and lowercase first char: eg "setAbc" -> "abc"
+            fi.name = name.substring(3,4).toLowerCase() + name.substring(4);
+            fi.type = parameterTypes[0];
+            PojoAnnotation anno = m.getAnnotation(PojoAnnotation.class);
+            fi.displayName = anno != null ? anno.displayName() : fi.name;
             fiList.add(fi);
         }
     }
@@ -52,22 +55,6 @@ public class PojoUtils {
         assert superclazz.equals(AbstractPojo.class);
         expandFieldInfoList(superclazz, fiList);
         expandFieldInfoList(clazz, fiList);
-        FieldInfo[] fia = new FieldInfo[fiList.size()];
-        return fiList.toArray(fia);
-    }
-
-    public static FieldInfo[] extractFieldInfoOLD(Class<? extends AbstractPojo> clazz) {
-        List<FieldInfo> fiList = new ArrayList<FieldInfo>();
-        Class<?> superclass = clazz.getSuperclass();
-        assert superclass.equals(AbstractPojo.class);
-        for (Field f : clazz.getDeclaredFields()) {
-            FieldInfo fi = new FieldInfo();
-            fi.type = f.getType();
-            fi.name = f.getName();
-            PojoAnnotation anno = f.getAnnotation(PojoAnnotation.class);
-            fi.displayName = anno != null ? anno.displayName() : f.getName();
-            fiList.add(fi);
-        }
         FieldInfo[] fia = new FieldInfo[fiList.size()];
         return fiList.toArray(fia);
     }
